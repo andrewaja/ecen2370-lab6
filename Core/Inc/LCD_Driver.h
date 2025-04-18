@@ -2,7 +2,7 @@
  * LCD_Driver.h
  *
  *  Created on: Sep 28, 2023
- *      Author: Xavion
+ *      Author: drew
  */
 
 #ifndef INC_LCD_DRIVER_H_
@@ -113,6 +113,8 @@ uint8_t ReadRegisterFromTouchModule(uint8_t RegToRead);
 void WriteDataToTouchModule(uint8_t RegToWrite, uint8_t writeData);
 
 uint8_t selectMode(STMPE811_TouchData * touchStruct);
+void returnToMenu(STMPE811_TouchData * touchStruct);
+
 bool switchColumn(STMPE811_TouchData * touchStruct, uint8_t * currentColumn);
 
 #endif /* INC_LCD_DRIVER_H_ */

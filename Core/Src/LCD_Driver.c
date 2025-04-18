@@ -2,7 +2,7 @@
  * LCD_Driver.c
  *
  *  Created on: Sep 28, 2023
- *      Author: Xavion
+ *      Author: drew
  */
 
 #include "LCD_Driver.h"
@@ -198,22 +198,11 @@ void LTCD__Init(void)
 
 /* START Draw functions */
 
-
-/*
- * This is really the only function needed.
- * All drawing consists of is manipulating the array.
- * Adding input sanitation should probably be done.
- */
 void LCD_Draw_Pixel(uint16_t x, uint16_t y, uint16_t color)
 {
 	frameBuffer[y*LCD_PIXEL_WIDTH+x] = color;  //You cannot do x*y to set the pixel.
 }
 
-/*
- * These functions are simple examples. Most computer graphics like OpenGl and stm's graphics library use a state machine. Where you first call some function like SetColor(color), SetPosition(x,y), then DrawSqure(size)
- * Instead all of these are explicit where color, size, and position are passed in.
- * There is tons of ways to handle drawing. I dont think it matters too much.
- */
 void LCD_Draw_Circle_Fill(uint16_t Xpos, uint16_t Ypos, uint16_t radius, uint16_t color)
 {
     for(int16_t y=-radius; y<=radius; y++)
@@ -312,10 +301,15 @@ void displayFilledBoard(void){
 	}
 }
 
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
+void dropChip(Gameboard * gameboard, uint8_t currentColumn, uint16_t color){
+	uint16_t currentHeight = gameboard->column[currentColumn-1].currentHeight;
+	uint16_t dropHeight = 300-CHIP_HSPACE*currentHeight;
+	LCD_Draw_Circle_Fill(CHIP_HSPACE*currentColumn, dropHeight, CHIP_RADIUS, color);
+
+	gameboard->column[currentColumn-1].contents[currentHeight] = gameboard->whosTurn;
+	gameboard->column[currentColumn-1].currentHeight++;
+}
+
 void LCD_Error_Handler(void)
 {
   /* User can add his own implementation to report the HAL error return state */
@@ -325,7 +319,7 @@ void LCD_Error_Handler(void)
   }
 }
 
-// Touch Functionality   //
+/* Touch Functionality */
 
 void InitializeLCDTouch(void)
 {
@@ -356,7 +350,6 @@ void WriteDataToTouchModule(uint8_t RegToWrite, uint8_t writeData)
 }
 
 uint8_t selectMode(STMPE811_TouchData * touchStruct){
-	touchStruct->x = 0;
 	touchStruct->y = 0;
 	while (1) {
 		if (returnTouchStateAndLocation(touchStruct) == STMPE811_State_Pressed){
@@ -368,9 +361,18 @@ uint8_t selectMode(STMPE811_TouchData * touchStruct){
 	}
 }
 
+void returnToMenu(STMPE811_TouchData * touchStruct){
+	touchStruct->y = 0;
+	while (1) {
+		if (returnTouchStateAndLocation(touchStruct) == STMPE811_State_Pressed){
+			if (touchStruct->y > LCD_PIXEL_HEIGHT-100 && touchStruct->y < LCD_PIXEL_HEIGHT-60)
+				return;
+		}
+	}
+}
+
 bool switchColumn(STMPE811_TouchData * touchStruct, uint8_t * currentColumn){
 	touchStruct->x = 0;
-	touchStruct->y = 0;
 	if (returnTouchStateAndLocation(touchStruct) == STMPE811_State_Pressed){
 		if (touchStruct->x < LCD_PIXEL_WIDTH / 2){
 			*currentColumn = (*currentColumn > 1) ? *currentColumn-1 : 7;
@@ -380,15 +382,4 @@ bool switchColumn(STMPE811_TouchData * touchStruct, uint8_t * currentColumn){
 		return true;
 	}
 	return false;
-}
-
-void dropChip(Gameboard * gameboard, uint8_t currentColumn, uint16_t color){
-	uint16_t currentHeight = gameboard->column[currentColumn-1].currentHeight;
-	uint16_t dropHeight = 300-CHIP_HSPACE*currentHeight;
-	LCD_Draw_Circle_Fill(CHIP_HSPACE*currentColumn, dropHeight, CHIP_RADIUS, color);
-
-	gameboard->column[currentColumn-1].contents[currentHeight] = gameboard->whosTurn;
-	gameboard->column[currentColumn-1].currentHeight++;
-
-	gameboard->whosTurn = (gameboard->whosTurn == YELLOW) ? RED : YELLOW;
 }

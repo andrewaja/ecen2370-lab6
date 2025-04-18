@@ -2,7 +2,7 @@
  * ApplicationCode.h
  *
  *  Created on: Dec 30, 2023
- *      Author: Xavion
+ *      Author: drew
  */
 
 #include "LCD_Driver.h"
@@ -16,25 +16,12 @@
 #ifndef INC_APPLICATIONCODE_H_
 #define INC_APPLICATIONCODE_H_
 
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-#define SWITCH_COLOR(color) 	((color == YELLOW) ? LCD_COLOR_YELLOW : LCD_COLOR_RED)
-
-typedef enum {
-	UP_LEFT,
-	UP,
-	UP_RIGHT,
-	RIGHT,
-	DOWN_RIGHT,
-	DOWN,
-	DOWN_LEFT,
-	LEFT
-}Direction;
+#define SWITCH_COLOR(color) ((color == YELLOW) ? RED : YELLOW)
+#define LCD_COLOR(color) 	((color == YELLOW) ? LCD_COLOR_YELLOW : LCD_COLOR_RED)
 
 void ApplicationInit(void);
 void PlayGame(void);
 
-bool CheckForWinnerHelper(uint8_t x, uint8_t y, ChipColor color, uint8_t numSame, uint8_t dir);
 bool CheckForWinner(uint8_t x, uint8_t y, ChipColor color);
 
 void PlaySinglePlayer(void);

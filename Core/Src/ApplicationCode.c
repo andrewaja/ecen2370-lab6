@@ -2,18 +2,18 @@
  * ApplicationCode.c
  *
  *  Created on: Dec 30, 2023 (updated 11/12/2024) Thanks Donavon! 
- *      Author: Xavion
+ *      Author: drew
  */
 
 #include "ApplicationCode.h"
+
+static STMPE811_TouchData StaticTouchData;
 
 static Gameboard gameboard;
 static uint8_t currentColumn = 1;
 static ChipColor winner;
 
 extern void initialise_monitor_handles(void); 
-
-static STMPE811_TouchData StaticTouchData;
 
 void ApplicationInit(void)
 {
@@ -35,9 +35,9 @@ void PlayGame(void)
 	HAL_Delay(2000);
 	while(1){
 		DisplayMenu();
+		HAL_Delay(500);
 		uint8_t numPlayers = selectMode(&StaticTouchData);
 		DisplayGame();
-		HAL_Delay(500);
 		switch (numPlayers){
 			case 1:
 				PlaySinglePlayer();
@@ -50,6 +50,7 @@ void PlayGame(void)
 				return;
 		}
 		DisplayEnd();
+		returnToMenu(&StaticTouchData);
 	}
 }
 
@@ -58,14 +59,14 @@ void DisplayTitle(void){
 	LCD_SetTextColor(LCD_COLOR_BLACK);
 	LCD_SetFont(&Font16x24);
 
-	LCD_DisplayChar(55,LCD_PIXEL_HEIGHT/2,'C');
-	LCD_DisplayChar(70,LCD_PIXEL_HEIGHT/2,'o');
-	LCD_DisplayChar(85,LCD_PIXEL_HEIGHT/2,'n');
-	LCD_DisplayChar(100,LCD_PIXEL_HEIGHT/2,'n');
-	LCD_DisplayChar(115,LCD_PIXEL_HEIGHT/2,'e');
-	LCD_DisplayChar(130,LCD_PIXEL_HEIGHT/2,'c');
-	LCD_DisplayChar(140,LCD_PIXEL_HEIGHT/2,'t');
-	LCD_DisplayChar(165,LCD_PIXEL_HEIGHT/2,'4');
+	LCD_DisplayChar(55,LCD_PIXEL_HEIGHT/2-10,'C');
+	LCD_DisplayChar(70,LCD_PIXEL_HEIGHT/2-10,'o');
+	LCD_DisplayChar(85,LCD_PIXEL_HEIGHT/2-10,'n');
+	LCD_DisplayChar(100,LCD_PIXEL_HEIGHT/2-10,'n');
+	LCD_DisplayChar(115,LCD_PIXEL_HEIGHT/2-10,'e');
+	LCD_DisplayChar(130,LCD_PIXEL_HEIGHT/2-10,'c');
+	LCD_DisplayChar(140,LCD_PIXEL_HEIGHT/2-10,'t');
+	LCD_DisplayChar(165,LCD_PIXEL_HEIGHT/2-10,'4');
 }
 
 void DisplayMenu(void){
@@ -131,16 +132,53 @@ void DisplayEnd(void){
 			LCD_Draw_Pixel(x, y, LCD_COLOR_BLUE);
 		}
 	}
-	LCD_DisplayChar(85,30,'W');
-	LCD_DisplayChar(95,30,'i');
-	LCD_DisplayChar(105,30,'n');
-	LCD_DisplayChar(120,30,'n');
-	LCD_DisplayChar(135,30,'e');
-	LCD_DisplayChar(150,30,'r');
-	LCD_DisplayChar(155,30,':');
+	if (winner == YELLOW){
+		LCD_DisplayChar(46,30,'W');
+		LCD_DisplayChar(56,30,'i');
+		LCD_DisplayChar(66,30,'n');
+		LCD_DisplayChar(81,30,'n');
+		LCD_DisplayChar(96,30,'e');
+		LCD_DisplayChar(111,30,'r');
+		LCD_DisplayChar(116,30,':');
 
-	// TODO
-	HAL_Delay(3000);
+		LCD_SetTextColor(LCD_COLOR_YELLOW);
+		LCD_DisplayChar(136,30,'Y');
+		LCD_DisplayChar(148,30,'e');
+		LCD_DisplayChar(158,30,'l');
+		LCD_DisplayChar(163,30,'l');
+		LCD_DisplayChar(170,30,'o');
+		LCD_DisplayChar(185,30,'w');
+
+	} else if (winner == RED){
+		LCD_DisplayChar(50,30,'W');
+		LCD_DisplayChar(65,30,'i');
+		LCD_DisplayChar(75,30,'n');
+		LCD_DisplayChar(90,30,'n');
+		LCD_DisplayChar(105,30,'e');
+		LCD_DisplayChar(120,30,'r');
+		LCD_DisplayChar(125,30,':');
+
+		LCD_SetTextColor(LCD_COLOR_RED);
+		LCD_DisplayChar(145,30,'R');
+		LCD_DisplayChar(160,30,'e');
+		LCD_DisplayChar(175,30,'d');
+	}
+
+	LCD_SetTextColor(LCD_COLOR_BLACK);
+	LCD_SetFont(&Font12x12);
+	for(y = 60; y<100; y++){
+		for(x=15; x < LCD_PIXEL_WIDTH-15; x++){
+			LCD_Draw_Pixel(x, y, LCD_COLOR_WHITE);
+		}
+	}
+	LCD_DisplayChar(88,75,'M');
+	LCD_DisplayChar(98,75,'a');
+	LCD_DisplayChar(105,75,'i');
+	LCD_DisplayChar(110,75,'n');
+	LCD_DisplayChar(127,75,'M');
+	LCD_DisplayChar(137,75,'e');
+	LCD_DisplayChar(145,75,'n');
+	LCD_DisplayChar(152,75,'u');
 }
 
 void PlaySinglePlayer(){
@@ -148,113 +186,32 @@ void PlaySinglePlayer(){
 	HAL_Delay(2000);
 }
 
-/* Direction Macros
- * 	   1 2 3
- * 	   8 x 4
- *     7 6 5
- */
-
-bool CheckForWinnerHelper(uint8_t x, uint8_t y, ChipColor color, uint8_t numSame, Direction dir){
-	if (numSame == 3)
-		return true; // base case
-
-	switch (dir){
-		case UP_LEFT:
-			if (x > 0 && y < NUM_ROWS-1){
-				ChipColor upLeft = gameboard.column[x-1].contents[y+1];
-				if (upLeft == color)
-					return CheckForWinnerHelper(x-1, y+1, color, numSame+1, UP_LEFT);
-			}
-			return false;
-		break;
-		case UP:
-			if (y < NUM_ROWS-1){
-				ChipColor up = gameboard.column[x].contents[y+1];
-				if (up == color)
-					return CheckForWinnerHelper(x, y+1, color, numSame+1, UP);
-			}
-			return false;
-		break;
-		case UP_RIGHT:
-			if (x < NUM_COLUMNS-1 && y < NUM_ROWS-1){
-				ChipColor upRight = gameboard.column[x+1].contents[y+1];
-				if (upRight == color)
-					return CheckForWinnerHelper(x+1, y+1, color, numSame+1, UP_RIGHT);
-			}
-			return false;
-		break;
-		case RIGHT:
-			if (x < NUM_COLUMNS-1){
-				ChipColor right = gameboard.column[x+1].contents[y];
-				if (right == color)
-					return CheckForWinnerHelper(x+1, y, color, numSame+1, RIGHT);
-			}
-			return false;
-		break;
-		case DOWN_RIGHT:
-			if (x < NUM_COLUMNS-1 && y > 0){
-				ChipColor downRight = gameboard.column[x+1].contents[y-1];
-				if (downRight == color)
-					return CheckForWinnerHelper(x+1, y-1, color, numSame+1, DOWN_RIGHT);
-			}
-			return false;
-		break;
-		case DOWN:
-			if (y > 0){
-				ChipColor down = gameboard.column[x].contents[y-1];
-				if (down == color)
-					return CheckForWinnerHelper(x, y-1, color, numSame+1, DOWN);
-			}
-			return false;
-		break;
-		case DOWN_LEFT:
-			if (x > 0 && y > 0){
-				ChipColor downLeft = gameboard.column[x-1].contents[y-1];
-				if (downLeft == color)
-					return CheckForWinnerHelper(x-1, y-1, color, numSame+1, DOWN_LEFT);
-			}
-			return false;
-		break;
-		case LEFT:
-			if (x > 0){
-				ChipColor left = gameboard.column[x-1].contents[y];
-				if (left == color)
-					return CheckForWinnerHelper(x-1, y, color, numSame+1, LEFT);
-			}
-			return false;
-		break;
-		default:
-			LCD_Clear(0, LCD_COLOR_RED);
-			HAL_Delay(3000);
-			return false;
-	}
-}
-
 bool CheckForWinner(uint8_t x, uint8_t y, ChipColor color){
-	if (x > 0 && y < NUM_ROWS-1){
-		if (CheckForWinnerHelper(x-1, y+1, color, 1, UP_LEFT)) return true;
+	uint8_t connect = 1;
+	int8_t dir[4][2] = {{-1, 1},  // UP_LEFT
+						{ 1, 0},  // UP
+						{ 1, 1},  // UP_RIGHT
+						{ 0, 1}}; // RIGHT
+
+	for (int i=0; i<4; i++){
+		int j = 1;
+		while (1){ // check positive dir
+			int adjx = x + dir[i][0] * j; int adjy = y + dir[i][1] * j;
+			if (adjx < 0 || adjx >= NUM_COLUMNS || adjy < 0 || adjy >= NUM_ROWS) break;
+			if (gameboard.column[adjx].contents[adjy] != color) break;
+			connect++; j++;
+		}
+
+		j = 1;
+		while (1){ // check negative dir
+			int adjx = x - dir[i][0] * j; int adjy = y - dir[i][1] * j;
+			if (adjx < 0 || adjx >= NUM_COLUMNS || adjy < 0 || adjy >= NUM_ROWS) break;
+			if (gameboard.column[adjx].contents[adjy] != color) break;
+			connect++; j++;
+		}
 	}
-	if (y < NUM_ROWS-1){
-		if (CheckForWinnerHelper(x, y+1, color, 1, UP)) return true;
-	}
-	if (x < NUM_COLUMNS-1 && y < NUM_ROWS-1){
-		if (CheckForWinnerHelper(x+1, y+1, color, 1, UP_RIGHT)) return true;
-	}
-	if (x < NUM_COLUMNS-1){
-		if (CheckForWinnerHelper(x+1, y, color, 1, RIGHT)) return true;
-	}
-	if (x < NUM_COLUMNS-1 && y > 0){
-		if (CheckForWinnerHelper(x+1, y-1, color, 1, DOWN_RIGHT)) return true;
-	}
-	if (y > 0){
-		if (CheckForWinnerHelper(x, y-1, color, 1, DOWN)) return true;
-	}
-	if (x > 0 && y > 0){
-		if (CheckForWinnerHelper(x-1, y-1, color, 1, DOWN_LEFT)) return true;
-	}
-	if (x > 0){
-		if (CheckForWinnerHelper(x-1, y, color, 1, LEFT)) return true;
-	}
+
+	if (connect >= 4) return true;
 	return false;
 }
 
@@ -267,13 +224,11 @@ void PlayTwoPlayer(){
 	}
 	gameboard.whosTurn = YELLOW;
 
-	bool gameOver = false;
 	uint8_t previousColumn = currentColumn;
-
 	LCD_Draw_Circle_Fill(CHIP_HSPACE*currentColumn, CHIP_VSPACE, CHIP_RADIUS, LCD_COLOR_YELLOW);
 
-	while (!gameOver){
-		uint16_t playerColor = SWITCH_COLOR(gameboard.whosTurn);
+	while (1){
+		uint16_t playerColor = LCD_COLOR(gameboard.whosTurn);
 		if (switchColumn(&StaticTouchData, &currentColumn)){
 			LCD_Draw_Circle_Fill(CHIP_HSPACE*previousColumn, CHIP_VSPACE, CHIP_RADIUS, LCD_COLOR_BLUE);
 			LCD_Draw_Circle_Fill(CHIP_HSPACE*currentColumn, CHIP_VSPACE, CHIP_RADIUS, playerColor);
@@ -283,13 +238,15 @@ void PlayTwoPlayer(){
 		if (eventsToRun & DROP_CHIP){
 			removeSchedulerEvent(DROP_CHIP);
 			dropChip(&gameboard, currentColumn, playerColor);
-			playerColor = SWITCH_COLOR(gameboard.whosTurn);
-			LCD_Draw_Circle_Fill(CHIP_HSPACE*currentColumn, CHIP_VSPACE, CHIP_RADIUS, playerColor);
 
 			uint8_t x = currentColumn-1;
 			uint8_t y = gameboard.column[currentColumn-1].currentHeight-1;
 			gameboard.column[x].contents[y] = gameboard.whosTurn;
-			gameOver = CheckForWinner(x, y, gameboard.whosTurn);
+			if (CheckForWinner(x, y, gameboard.whosTurn)) break;
+
+			gameboard.whosTurn = SWITCH_COLOR(gameboard.whosTurn);
+			playerColor = LCD_COLOR(gameboard.whosTurn);
+			LCD_Draw_Circle_Fill(CHIP_HSPACE*currentColumn, CHIP_VSPACE, CHIP_RADIUS, playerColor);
 		}
 		HAL_Delay(100);
 	}
