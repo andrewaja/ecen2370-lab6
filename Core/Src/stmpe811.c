@@ -7,8 +7,6 @@
 
 #include "stmpe811.h"
 
-#if COMPILE_TOUCH == 1
-
 #define ONEBYTE  1
 #define TWOBYTE  2
 
@@ -379,5 +377,3 @@ uint16_t TM_STMPE811_ReadY(uint16_t y) { // TM FUNCTION
     }
     return y;
 }
-
-#endif

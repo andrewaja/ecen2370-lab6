@@ -8,13 +8,12 @@
 #ifndef INC_LCD_DRIVER_H_
 #define INC_LCD_DRIVER_H_
 
+#include <stdbool.h>
+
 #include "stm32f4xx_hal.h"
 #include "ili9341.h"
 #include "fonts.h"
 #include "stmpe811.h"
-
-#define COMPILE_TOUCH_FUNCTIONS COMPILE_TOUCH
-#define TOUCH_INTERRUPT_ENABLED COMPILE_TOUCH_INTERRUPT_SUPPORT
 
 /**
   * @brief  LCD color RGB565
@@ -54,8 +53,37 @@
 #define  LCD_PIXEL_HEIGHT   ((uint16_t)320)
 #define  LCD_PIXELS		     ((uint32_t)LCD_PIXEL_WIDTH * (uint32_t)LCD_PIXEL_HEIGHT)
 
+#define COLUMN_WIDTH	30
+#define BOARD_WIDTH		210
+#define COLUMN_OFFSET 	15
+
+#define CHIP_VSPACE	30
+#define CHIP_HSPACE	30
+#define CHIP_RADIUS 10
+
+#define NUM_COLUMNS 7
+#define NUM_ROWS 	6
+
+typedef enum {
+	RED,
+	YELLOW,
+	EMPTY
+}ChipColor;
+
+typedef struct {
+	uint16_t currentHeight;
+	ChipColor contents[7];
+}Column;
+
+typedef struct {
+	Column column[7];
+	ChipColor whosTurn;
+}Gameboard;
+
 void LTCD__Init(void);
 void LTCD_Layer_Init(uint8_t LayerIndex);
+
+void LCD_Draw_Pixel(uint16_t x, uint16_t y, uint16_t color);
 
 void LCD_DrawChar(uint16_t Xpos, uint16_t Ypos, const uint16_t *c);
 void LCD_DisplayChar(uint16_t Xpos, uint16_t Ypos, uint8_t Ascii);
@@ -71,23 +99,20 @@ void LCD_Clear(uint8_t LayerIndex, uint16_t Color);
 
 void LCD_Error_Handler(void);
 
-// Demo using provided functions
-void visualDemo(void);
+void displayEmptyBoard(void);
+void displayFilledBoard(void);
+
+void dropChip(Gameboard * gameboard, uint8_t currentColumn, uint16_t color);
 
 void LCD_Error_Handler(void);
 
-#if COMPILE_TOUCH_FUNCTIONS == 1
 void InitializeLCDTouch(void);
 STMPE811_State_t returnTouchStateAndLocation(STMPE811_TouchData * touchStruct);
-void LCD_Touch_Polling_Demo(void);
 void DetermineTouchPosition(STMPE811_TouchData * touchStruct);
 uint8_t ReadRegisterFromTouchModule(uint8_t RegToRead);
 void WriteDataToTouchModule(uint8_t RegToWrite, uint8_t writeData);
 
-#endif // COMPILE_TOUCH_FUNCTIONS
-
-
-/*        APPLICATION SPECIFIC FUNCTION DECLARATION - PUT YOUR NEWLY CREATED FUNCTIONS HERE       */
-
+uint8_t selectMode(STMPE811_TouchData * touchStruct);
+bool switchColumn(STMPE811_TouchData * touchStruct, uint8_t * currentColumn);
 
 #endif /* INC_LCD_DRIVER_H_ */

@@ -1,3 +1,11 @@
-../Core/Src/ApplicationCode.c:19:6:ApplicationInit	1
-../Core/Src/ApplicationCode.c:36:6:LCD_Visual_Demo	1
-../Core/Src/ApplicationCode.c:42:6:LCD_Touch_Polling_Demo	2
+../Core/Src/ApplicationCode.c:18:6:ApplicationInit	1
+../Core/Src/ApplicationCode.c:32:6:PlayGame	3
+../Core/Src/ApplicationCode.c:56:6:DisplayTitle	1
+../Core/Src/ApplicationCode.c:71:6:DisplayMenu	5
+../Core/Src/ApplicationCode.c:119:6:DisplayGame	1
+../Core/Src/ApplicationCode.c:124:6:DisplayEnd	3
+../Core/Src/ApplicationCode.c:146:6:PlaySinglePlayer	1
+../Core/Src/ApplicationCode.c:157:6:CheckForWinnerHelper	30
+../Core/Src/ApplicationCode.c:233:6:CheckForWinner	21
+../Core/Src/ApplicationCode.c:261:6:PlayTwoPlayer	8
+../Core/Src/ApplicationCode.c:299:6:EXTI0_IRQHandler	2

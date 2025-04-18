@@ -16,7 +16,7 @@
 static LTDC_HandleTypeDef hltdc;
 static RCC_PeriphCLKInitTypeDef  PeriphClkInitStruct;
 static FONT_t *LCD_Currentfonts;
-static uint16_t CurrentTextColor   = 0xFFFF;
+static uint16_t CurrentTextColor = 0xFFFF;
 
 
 /*
@@ -243,22 +243,18 @@ void LCD_Clear(uint8_t LayerIndex, uint16_t Color)
 			frameBuffer[i] = Color;
 		}
 	}
-  // TODO: Add more Layers if needed
 }
 
-//This was taken and adapted from stm32's mcu code
 void LCD_SetTextColor(uint16_t Color)
 {
   CurrentTextColor = Color;
 }
 
-//This was taken and adapted from stm32's mcu code
 void LCD_SetFont(FONT_t *fonts)
 {
   LCD_Currentfonts = fonts;
 }
 
-//This was taken and adapted from stm32's mcu code
 void LCD_Draw_Char(uint16_t Xpos, uint16_t Ypos, const uint16_t *c)
 {
   uint32_t index = 0, counter = 0;
@@ -278,57 +274,42 @@ void LCD_Draw_Char(uint16_t Xpos, uint16_t Ypos, const uint16_t *c)
   }
 }
 
-//This was taken and adapted from stm32's mcu code
 void LCD_DisplayChar(uint16_t Xpos, uint16_t Ypos, uint8_t Ascii)
 {
   Ascii -= 32;
   LCD_Draw_Char(Xpos, Ypos, &LCD_Currentfonts->table[Ascii * LCD_Currentfonts->Height]);
 }
 
-void visualDemo(void)
-{
-	uint16_t x;
-	uint16_t y;
-	// This for loop just illustrates how with using logic and for loops, you can create interesting things
-	// this may or not be useful ;)
-	for(y=0; y<LCD_PIXEL_HEIGHT; y++){
-		for(x=0; x < LCD_PIXEL_WIDTH; x++){
-			if (x & 32)
-				frameBuffer[x*y] = LCD_COLOR_WHITE;
-			else
-				frameBuffer[x*y] = LCD_COLOR_BLACK;
-		}
+void displayEmptyBoard(void){
+	for (int i=1; i<9; i++){
+		LCD_Draw_Vertical_Line(30*i+14, 125, 195, LCD_COLOR_BLACK);
+		LCD_Draw_Vertical_Line(30*i+15, 125, 195, LCD_COLOR_BLACK);
+		LCD_Draw_Vertical_Line(30*i+16, 125, 195, LCD_COLOR_BLACK);
 	}
+}
 
-	HAL_Delay(1500);
-	LCD_Clear(0, LCD_COLOR_GREEN);
-	HAL_Delay(1500);
-	LCD_Clear(0, LCD_COLOR_RED);
-	HAL_Delay(1500);
-	LCD_Clear(0, LCD_COLOR_WHITE);
-	LCD_Draw_Vertical_Line(10,10,250,LCD_COLOR_MAGENTA);
-	HAL_Delay(1500);
-	LCD_Draw_Vertical_Line(230,10,250,LCD_COLOR_MAGENTA);
-	HAL_Delay(1500);
-
-	LCD_Draw_Circle_Fill(125,150,20,LCD_COLOR_BLACK);
-	HAL_Delay(2000);
-
-	LCD_Clear(0,LCD_COLOR_BLUE);
-	LCD_SetTextColor(LCD_COLOR_BLACK);
-	LCD_SetFont(&Font16x24);
-
-	LCD_DisplayChar(100,140,'H');
-	LCD_DisplayChar(115,140,'e');
-	LCD_DisplayChar(125,140,'l');
-	LCD_DisplayChar(130,140,'l');
-	LCD_DisplayChar(140,140,'o');
-
-	LCD_DisplayChar(100,160,'W');
-	LCD_DisplayChar(115,160,'o');
-	LCD_DisplayChar(125,160,'r');
-	LCD_DisplayChar(130,160,'l');
-	LCD_DisplayChar(140,160,'d');
+void displayFilledBoard(void){
+	displayEmptyBoard();
+	for (int i=0; i<6; i+=2){
+		uint16_t height = 300-30*i;
+		LCD_Draw_Circle_Fill(  CHIP_HSPACE, height, CHIP_RADIUS, LCD_COLOR_YELLOW);
+		LCD_Draw_Circle_Fill(2*CHIP_HSPACE, height, CHIP_RADIUS, LCD_COLOR_RED);
+		LCD_Draw_Circle_Fill(3*CHIP_HSPACE, height, CHIP_RADIUS, LCD_COLOR_YELLOW);
+		LCD_Draw_Circle_Fill(4*CHIP_HSPACE, height, CHIP_RADIUS, LCD_COLOR_RED);
+		LCD_Draw_Circle_Fill(5*CHIP_HSPACE, height, CHIP_RADIUS, LCD_COLOR_YELLOW);
+		LCD_Draw_Circle_Fill(6*CHIP_HSPACE, height, CHIP_RADIUS, LCD_COLOR_RED);
+		LCD_Draw_Circle_Fill(7*CHIP_HSPACE, height, CHIP_RADIUS, LCD_COLOR_YELLOW);
+	}
+	for (int i=1; i<6; i+=2){
+		uint16_t height = 300-30*i;
+		LCD_Draw_Circle_Fill(  CHIP_HSPACE, height, CHIP_RADIUS, LCD_COLOR_RED);
+		LCD_Draw_Circle_Fill(2*CHIP_HSPACE, height, CHIP_RADIUS, LCD_COLOR_YELLOW);
+		LCD_Draw_Circle_Fill(3*CHIP_HSPACE, height, CHIP_RADIUS, LCD_COLOR_RED);
+		LCD_Draw_Circle_Fill(4*CHIP_HSPACE, height, CHIP_RADIUS, LCD_COLOR_YELLOW);
+		LCD_Draw_Circle_Fill(5*CHIP_HSPACE, height, CHIP_RADIUS, LCD_COLOR_RED);
+		LCD_Draw_Circle_Fill(6*CHIP_HSPACE, height, CHIP_RADIUS, LCD_COLOR_YELLOW);
+		LCD_Draw_Circle_Fill(7*CHIP_HSPACE, height, CHIP_RADIUS, LCD_COLOR_RED);
+	}
 }
 
 /**
@@ -337,18 +318,14 @@ void visualDemo(void)
   */
 void LCD_Error_Handler(void)
 {
-  /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
   while (1)
   {
   }
-  /* USER CODE END Error_Handler_Debug */
 }
 
 // Touch Functionality   //
-
-#if COMPILE_TOUCH_FUNCTIONS == 1
 
 void InitializeLCDTouch(void)
 {
@@ -378,4 +355,40 @@ void WriteDataToTouchModule(uint8_t RegToWrite, uint8_t writeData)
 	STMPE811_Write(RegToWrite, writeData);
 }
 
-#endif // COMPILE_TOUCH_FUNCTIONS
+uint8_t selectMode(STMPE811_TouchData * touchStruct){
+	touchStruct->x = 0;
+	touchStruct->y = 0;
+	while (1) {
+		if (returnTouchStateAndLocation(touchStruct) == STMPE811_State_Pressed){
+			if (touchStruct->y > LCD_PIXEL_HEIGHT-50 && touchStruct->y < LCD_PIXEL_HEIGHT-10)
+				return (uint8_t)1;
+			else if (touchStruct->y > LCD_PIXEL_HEIGHT-100 && touchStruct->y < LCD_PIXEL_HEIGHT-60)
+				return (uint8_t)2;
+		}
+	}
+}
+
+bool switchColumn(STMPE811_TouchData * touchStruct, uint8_t * currentColumn){
+	touchStruct->x = 0;
+	touchStruct->y = 0;
+	if (returnTouchStateAndLocation(touchStruct) == STMPE811_State_Pressed){
+		if (touchStruct->x < LCD_PIXEL_WIDTH / 2){
+			*currentColumn = (*currentColumn > 1) ? *currentColumn-1 : 7;
+		} else {
+			*currentColumn = (*currentColumn < 7) ? *currentColumn+1 : 1;
+		}
+		return true;
+	}
+	return false;
+}
+
+void dropChip(Gameboard * gameboard, uint8_t currentColumn, uint16_t color){
+	uint16_t currentHeight = gameboard->column[currentColumn-1].currentHeight;
+	uint16_t dropHeight = 300-CHIP_HSPACE*currentHeight;
+	LCD_Draw_Circle_Fill(CHIP_HSPACE*currentColumn, dropHeight, CHIP_RADIUS, color);
+
+	gameboard->column[currentColumn-1].contents[currentHeight] = gameboard->whosTurn;
+	gameboard->column[currentColumn-1].currentHeight++;
+
+	gameboard->whosTurn = (gameboard->whosTurn == YELLOW) ? RED : YELLOW;
+}
