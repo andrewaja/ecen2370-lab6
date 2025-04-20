@@ -64,6 +64,9 @@
 #define NUM_COLUMNS 7
 #define NUM_ROWS 	6
 
+#define FULL 	 NUM_ROWS
+#define AI_COLOR RED
+
 typedef enum {
 	RED,
 	YELLOW,

@@ -5,9 +5,11 @@
  *      Author: drew
  */
 
-#include "LCD_Driver.h"
-#include "Button_Driver.h"
 #include "Scheduler.h"
+#include "LCD_Driver.h"
+#include "Timer_Driver.h"
+#include "Button_Driver.h"
+
 #include "stm32f4xx_hal.h"
 
 #include <stdio.h>
@@ -20,16 +22,16 @@
 #define LCD_COLOR(color) 	((color == YELLOW) ? LCD_COLOR_YELLOW : LCD_COLOR_RED)
 
 void ApplicationInit(void);
-void PlayGame(void);
-
-bool CheckForWinner(uint8_t x, uint8_t y, ChipColor color);
-
-void PlaySinglePlayer(void);
-void PlayTwoPlayer(void);
 
 void DisplayTitle(void);
 void DisplayMenu(void);
 void DisplayGame(void);
-void DisplayEnd(void);
+void DisplayEnd(uint32_t time);
+
+uint8_t CheckForWinner(uint8_t x, uint8_t y, ChipColor color);
+uint8_t GetNextMove();
+
+uint32_t PlayGame(uint8_t numPlayers);
+void StartGame(void);
 
 #endif /* INC_APPLICATIONCODE_H_ */

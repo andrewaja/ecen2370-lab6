@@ -1,0 +1,10 @@
+../Core/Src/Timer_Driver.c:12:6:Tim2Init	16	static
+../Core/Src/Timer_Driver.c:26:6:Tim2Start	4	static
+../Core/Src/Timer_Driver.c:30:6:Tim2Stop	4	static
+../Core/Src/Timer_Driver.c:34:6:Tim2Reset	4	static
+../Core/Src/Timer_Driver.c:38:10:GetTim2Count	4	static
+../Core/Src/Timer_Driver.c:42:10:GetTim2AutoReload	4	static
+../Core/Src/Timer_Driver.c:46:6:SetTim2Count	16	static
+../Core/Src/Timer_Driver.c:50:6:SetTim2AutoReload	16	static
+../Core/Src/Timer_Driver.c:54:6:Tim2ClearSR	4	static
+../Core/Src/Timer_Driver.c:58:10:GetTimeInSeconds	24	static

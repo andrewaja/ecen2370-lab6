@@ -312,11 +312,14 @@ void dropChip(Gameboard * gameboard, uint8_t currentColumn, uint16_t color){
 
 void LCD_Error_Handler(void)
 {
-  /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
-  {
-  }
+	/* User can add his own implementation to report the HAL error return state */
+	__disable_irq();
+	while (1){
+		LCD_Clear(0, LCD_COLOR_RED);
+		HAL_Delay(1000);
+		LCD_Clear(0, LCD_COLOR_WHITE);
+		HAL_Delay(1000);
+	}
 }
 
 /* Touch Functionality */
@@ -365,7 +368,7 @@ void returnToMenu(STMPE811_TouchData * touchStruct){
 	touchStruct->y = 0;
 	while (1) {
 		if (returnTouchStateAndLocation(touchStruct) == STMPE811_State_Pressed){
-			if (touchStruct->y > LCD_PIXEL_HEIGHT-100 && touchStruct->y < LCD_PIXEL_HEIGHT-60)
+			if (touchStruct->y > LCD_PIXEL_HEIGHT-110 && touchStruct->y < LCD_PIXEL_HEIGHT-70)
 				return;
 		}
 	}

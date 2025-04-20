@@ -51,7 +51,7 @@ int main(void)
 	ApplicationInit();
 	HAL_Delay(1000);
 
-	PlayGame();
+	StartGame();
 }
 
 void SystemClock_Config(void)
